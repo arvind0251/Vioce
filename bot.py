@@ -1,20 +1,19 @@
 import telebot
-import requests
 import os
+import http.client
+import requests
 from pydub import AudioSegment
 
 # Set FFmpeg and FFprobe path for Heroku
 AudioSegment.converter = "/app/vendor/ffmpeg/ffmpeg"
-AudioSegment.ffprobe   = "/app/vendor/ffmpeg/ffprobe"
+AudioSegment.ffprobe = "/app/vendor/ffmpeg/ffprobe"
 
 # Telegram Bot Token
 BOT_TOKEN = "7292774770:AAGzEgqEhkXkaN6KMkYofTcYkJOoG1DdTOs"
 
-# RapidAPI API Headers
-HEADERS = {
-    'x-rapidapi-key': "b689fbd269mshfcdc75a663eb40ap1b3393jsnaa5ce053d101",
-    'x-rapidapi-host': "ai-girlfriend-voice.p.rapidapi.com"
-}
+# API Details
+API_HOST = "ai-girlfriend-voice.p.rapidapi.com"
+API_KEY = "b689fbd269mshfcdc75a663eb40ap1b3393jsnaa5ce053d101"
 
 # Initialize bot
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -45,23 +44,34 @@ def handle_voice(message):
         sound = sound.set_frame_rate(16000).set_sample_width(2).set_channels(1)  # Ensure correct format
         sound.export(wav_file, format="wav")
 
-        # Send request to AI API for voice conversion
+        # Send request to AI API for voice conversion using http.client
+        conn = http.client.HTTPSConnection(API_HOST)
+        headers = {
+            'x-rapidapi-key': API_KEY,
+            'x-rapidapi-host': API_HOST,
+            'Content-Type': 'application/octet-stream'
+        }
+
+        # Open the WAV file and read its content
         with open(wav_file, "rb") as f:
-            api_response = requests.post("https://ai-girlfriend-voice.p.rapidapi.com/convert",
-                                         headers=HEADERS, files={"file": f})
+            file_data = f.read()
+
+        conn.request("POST", "/convert", body=file_data, headers=headers)
+        res = conn.getresponse()
+        api_response = res.read()
 
         # Debugging: Print API response
-        print("API Response Status:", api_response.status_code)
-        print("API Response Content:", api_response.text)
+        print("API Response Status:", res.status)
+        print("API Response Content:", api_response.decode())
 
-        if api_response.status_code == 200:
+        if res.status == 200:
             output_voice = f"voices/{message.from_user.id}_girl.ogg"
             with open(output_voice, "wb") as f:
-                f.write(api_response.content)
+                f.write(api_response)
 
             bot.send_voice(message.chat.id, open(output_voice, "rb"))
         else:
-            bot.send_message(message.chat.id, f"Error converting voice: {api_response.text}")
+            bot.send_message(message.chat.id, f"Error converting voice: {api_response.decode()}")
 
         # Clean up temporary files
         os.remove(voice_file)
