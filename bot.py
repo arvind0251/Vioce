@@ -39,15 +39,20 @@ def handle_voice(message):
         with open(voice_file, 'wb') as f:
             f.write(response.content)
 
-        # Convert OGG to WAV (required by API)
+        # Convert OGG to WAV (16-bit PCM format for compatibility)
         wav_file = f"voices/{message.from_user.id}.wav"
         sound = AudioSegment.from_file(voice_file, format="ogg")
+        sound = sound.set_frame_rate(16000).set_sample_width(2).set_channels(1)  # Ensure correct format
         sound.export(wav_file, format="wav")
 
         # Send request to AI API for voice conversion
         with open(wav_file, "rb") as f:
             api_response = requests.post("https://ai-girlfriend-voice.p.rapidapi.com/convert",
                                          headers=HEADERS, files={"file": f})
+
+        # Debugging: Print API response
+        print("API Response Status:", api_response.status_code)
+        print("API Response Content:", api_response.text)
 
         if api_response.status_code == 200:
             output_voice = f"voices/{message.from_user.id}_girl.ogg"
@@ -56,7 +61,7 @@ def handle_voice(message):
 
             bot.send_voice(message.chat.id, open(output_voice, "rb"))
         else:
-            bot.send_message(message.chat.id, "Error converting voice. Please try again later.")
+            bot.send_message(message.chat.id, f"Error converting voice: {api_response.text}")
 
         # Clean up temporary files
         os.remove(voice_file)
