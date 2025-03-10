@@ -3,7 +3,10 @@ import requests
 import os
 from pydub import AudioSegment
 
-# Telegram Bot Token
+# Set ffmpeg path for Heroku
+AudioSegment.converter = "/app/vendor/ffmpeg/ffmpeg"
+
+# Telegram Bot Token (Directly in the code)
 BOT_TOKEN = "7292774770:AAGzEgqEhkXkaN6KMkYofTcYkJOoG1DdTOs"
 
 # RapidAPI Headers
@@ -35,7 +38,7 @@ def handle_voice(message):
         with open(voice_file, 'wb') as f:
             f.write(response.content)
 
-        # Convert OGG to WAV (if required by API)
+        # Convert OGG to WAV (required by API)
         wav_file = f"voices/{message.from_user.id}.wav"
         sound = AudioSegment.from_file(voice_file, format="ogg")
         sound.export(wav_file, format="wav")
