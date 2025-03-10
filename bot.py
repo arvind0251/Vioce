@@ -3,13 +3,14 @@ import requests
 import os
 from pydub import AudioSegment
 
-# Set ffmpeg path for Heroku
+# Set FFmpeg and FFprobe path for Heroku
 AudioSegment.converter = "/app/vendor/ffmpeg/ffmpeg"
+AudioSegment.ffprobe   = "/app/vendor/ffmpeg/ffprobe"
 
-# Telegram Bot Token (Directly in the code)
+# Telegram Bot Token
 BOT_TOKEN = "7292774770:AAGzEgqEhkXkaN6KMkYofTcYkJOoG1DdTOs"
 
-# RapidAPI Headers
+# RapidAPI API Headers
 HEADERS = {
     'x-rapidapi-key': "b689fbd269mshfcdc75a663eb40ap1b3393jsnaa5ce053d101",
     'x-rapidapi-host': "ai-girlfriend-voice.p.rapidapi.com"
@@ -27,7 +28,7 @@ if not os.path.exists("voices"):
 def handle_voice(message):
     bot.send_message(message.chat.id, "Processing your voice...")
 
-    # Download voice file
+    # Download the voice file
     file_info = bot.get_file(message.voice.file_id)
     file_path = file_info.file_path
     file_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
@@ -43,7 +44,7 @@ def handle_voice(message):
         sound = AudioSegment.from_file(voice_file, format="ogg")
         sound.export(wav_file, format="wav")
 
-        # Send request to API for voice conversion
+        # Send request to AI API for voice conversion
         with open(wav_file, "rb") as f:
             api_response = requests.post("https://ai-girlfriend-voice.p.rapidapi.com/convert",
                                          headers=HEADERS, files={"file": f})
@@ -57,7 +58,7 @@ def handle_voice(message):
         else:
             bot.send_message(message.chat.id, "Error converting voice. Please try again later.")
 
-        # Clean up files
+        # Clean up temporary files
         os.remove(voice_file)
         os.remove(wav_file)
     else:
