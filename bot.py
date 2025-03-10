@@ -44,7 +44,7 @@ def handle_voice(message):
         sound = sound.set_frame_rate(16000).set_sample_width(2).set_channels(1)  # Ensure correct format
         sound.export(wav_file, format="wav")
 
-        # Send request to AI API for voice conversion using http.client
+        # Send request to AI API using the correct endpoint
         conn = http.client.HTTPSConnection(API_HOST)
         headers = {
             'x-rapidapi-key': API_KEY,
@@ -56,7 +56,8 @@ def handle_voice(message):
         with open(wav_file, "rb") as f:
             file_data = f.read()
 
-        conn.request("POST", "/convert", body=file_data, headers=headers)
+        # 🔹 Corrected API endpoint
+        conn.request("POST", "/female-voices", body=file_data, headers=headers)
         res = conn.getresponse()
         api_response = res.read()
 
