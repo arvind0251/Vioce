@@ -2,4 +2,4 @@ pyTelegramBotAPI
 requests
 pydub==0.25.0
 gunicorn
-ffmpeg
+
