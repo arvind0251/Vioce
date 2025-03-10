@@ -4,7 +4,7 @@ import os
 from pydub import AudioSegment
 
 # Telegram Bot Token
-BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
+BOT_TOKEN = "7292774770:AAGzEgqEhkXkaN6KMkYofTcYkJOoG1DdTOs"
 
 # RapidAPI Headers
 HEADERS = {
